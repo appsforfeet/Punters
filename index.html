@@ -1,201 +1,6 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Punters Club Tracker</title>
-  <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    body { margin: 0; background:#0b0f14; color:#e9eef5; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
-    h1 { margin: 6px 0 10px; font-size: 22px; }
-    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14px; }
-    @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
-
-    .card { background:#111826; border:1px solid #1f2a3d; border-radius:16px; padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-    .row { display:flex; gap:10px; flex-wrap: wrap; align-items: end; }
-    label { display:block; font-size: 12px; opacity:.85; margin-bottom: 6px; }
-    input, select, button, textarea {
-      background:#0c1320; color:#e9eef5; border:1px solid #223049; border-radius:12px;
-      padding:10px 12px; font-size:14px; outline:none;
-    }
-    input:focus, select:focus, textarea:focus { border-color:#4b7bec; box-shadow: 0 0 0 3px rgba(75,123,236,.2); }
-    button { cursor:pointer; border-color:#355aa7; background:#16315f; }
-    button:hover { filter: brightness(1.1); }
-    .btn2 { border-color:#3a3a3a; background:#141414; }
-    .pill { display:inline-flex; gap:10px; align-items:center; border:1px solid #24314a; padding:10px 12px; border-radius:999px; }
-    .big { font-size: 28px; font-weight: 800; letter-spacing: .2px; }
-    .muted { opacity:.78; }
-    .good { color:#59d08c; }
-    .bad { color:#ff5c7a; }
-    table { width:100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align:left; padding:10px 8px; border-bottom: 1px solid #1f2a3d; vertical-align: top; }
-    th { font-size:12px; opacity:.85; }
-    .right { text-align:right; }
-    .tag { font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid #2b3a57; display:inline-block; }
-    .tag.dep { border-color:#2f6bff66; }
-    .tag.bet { border-color:#ffb02066; }
-    .tag.win { border-color:#2fd07d66; }
-    .tag.loss { border-color:#ff4d6d66; }
-    .tag.wd { border-color:#b07cff66; }
-    .mini { font-size: 12px; opacity:.8; }
-    .split { display:flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    .danger { border-color:#ff4d6d66; background:#2a0e16; }
-    .danger:hover { filter: brightness(1.05); }
-    .footer { margin-top: 10px; font-size: 12px; opacity:.75; }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="split">
-      <div>
-        <h1>🏇 Punters Club Tracker</h1>
-        <div class="mini muted">Runs locally • autosaves • no logins • export to CSV</div>
-      </div>
-      <div class="row">
-        <button class="btn2" id="btnExport">Export CSV</button>
-        <button class="btn2" id="btnBackup">Backup JSON</button>
-        <label style="display:none">
-          <input type="file" id="fileRestore" accept="application/json"/>
-        </label>
-        <button class="btn2" id="btnRestore">Restore JSON</button>
-        <button class="danger" id="btnReset">Reset</button>
-      </div>
-    </div>
-
-    <div class="grid" style="margin-top:14px;">
-      <!-- LEFT -->
-      <div class="card">
-        <div class="split">
-          <div class="pill">
-            <div>
-              <div class="mini muted">Current Balance</div>
-              <div class="big" id="balance">$0.00</div>
-            </div>
-          </div>
-          <div class="pill">
-            <div>
-              <div class="mini muted">Season Deposits</div>
-              <div class="big" id="deposits">$0.00</div>
-            </div>
-          </div>
-          <div class="pill">
-            <div>
-              <div class="mini muted">Net Profit/Loss</div>
-              <div class="big" id="net">$0.00</div>
-            </div>
-          </div>
-        </div>
-
-        <h2 style="margin:14px 0 8px; font-size:16px;">Add Transaction</h2>
-
-        <div class="row">
-          <div style="flex:1; min-width: 160px;">
-            <label>Type</label>
-            <select id="type">
-              <option value="deposit">Deposit (weekly contributions)</option>
-              <option value="bet">Bet placed</option>
-              <option value="win">Win</option>
-              <option value="loss">Loss</option>
-              <option value="withdrawal">Withdrawal / payout</option>
-            </select>
-          </div>
-
-          <div style="flex:1; min-width: 160px;">
-            <label>Date</label>
-            <input id="date" type="date" />
-          </div>
-
-          <div style="flex:1; min-width: 160px;">
-            <label>Amount (AUD)</label>
-            <input id="amount" inputmode="decimal" placeholder="e.g. 25 or 113.50" />
-          </div>
-
-          <div style="flex:1; min-width: 180px;">
-            <label>Member (optional)</label>
-            <select id="member"></select>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px;">
-          <div style="flex: 1; min-width: 240px;">
-            <label>Notes</label>
-            <input id="notes" placeholder="e.g. Wyong R5 boxed trifecta / Season 2 Week 24" />
-          </div>
-          <button id="btnAdd" style="height:42px;">Add</button>
-        </div>
-
-        <h2 style="margin:16px 0 8px; font-size:16px;">Ledger</h2>
-        <div class="row" style="margin-bottom:10px;">
-          <input id="search" placeholder="Search ledger…" style="flex:1; min-width: 220px;" />
-          <select id="filterType" style="min-width: 200px;">
-            <option value="all">All types</option>
-            <option value="deposit">Deposits</option>
-            <option value="bet">Bets</option>
-            <option value="win">Wins</option>
-            <option value="loss">Losses</option>
-            <option value="withdrawal">Withdrawals</option>
-          </select>
-        </div>
-
-        <div style="overflow:auto; border-radius: 12px; border:1px solid #1f2a3d;">
-          <table>
-            <thead>
-              <tr>
-                <th style="min-width: 90px;">Date</th>
-                <th style="min-width: 120px;">Type</th>
-                <th style="min-width: 120px;">Member</th>
-                <th>Notes</th>
-                <th class="right" style="min-width: 120px;">Amount</th>
-                <th class="right" style="min-width: 110px;">Balance</th>
-                <th class="right" style="min-width: 80px;">🗑️</th>
-              </tr>
-            </thead>
-            <tbody id="ledger"></tbody>
-          </table>
-        </div>
-
-        <div class="footer">
-          Tip: Deposits add to balance. Bets reduce balance. Wins add. Loss is optional (use it if you track stake separately).
-        </div>
-      </div>
-
-      <!-- RIGHT -->
-      <div class="card">
-        <h2 style="margin:6px 0 10px; font-size:16px;">Members</h2>
-
-        <div class="row">
-          <div style="flex:1; min-width: 180px;">
-            <label>Add member</label>
-            <input id="newMember" placeholder="e.g. J, Dad, Cousin" />
-          </div>
-          <button id="btnAddMember" style="height:42px;">Add</button>
-        </div>
-
-        <div style="margin-top:10px;" id="membersList"></div>
-
-        <h2 style="margin:18px 0 8px; font-size:16px;">Quick Tools</h2>
-        <div class="row">
-          <div style="flex:1; min-width: 180px;">
-            <label>Weekly contribution default</label>
-            <input id="weeklyDefault" inputmode="decimal" placeholder="25" />
-          </div>
-          <button id="btnAddWeekly" style="height:42px;">Add weekly deposits for ALL</button>
-        </div>
-
-        <div class="mini muted" style="margin-top:8px;">
-          This adds a deposit transaction per member (e.g. $25 each) and updates balance.
-        </div>
-
-        <h2 style="margin:18px 0 8px; font-size:16px;">Season Summary</h2>
-        <div id="summary" class="mini"></div>
-      </div>
-    </div>
-  </div>
-
 <script>
 (() => {
-  const KEY = "punters_club_tracker_v1";
+  const KEY = "punters_club_tracker_v2";
 
   const $ = (id) => document.getElementById(id);
 
@@ -210,11 +15,22 @@
     return new Date(Date.now() - tz).toISOString().slice(0,10);
   };
 
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY) || localStorage.getItem("punters_club_tracker_v1");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+
   const state = load() ?? {
     members: ["J"],
     weeklyDefault: 25,
-    tx: [] // {id, date, type, amount, member, notes}
+    tx: [],     // ledger transactions
+    bets: []    // pending/settled bets
   };
+
+  // Backwards compatibility if old save didn’t have bets
+  if (!Array.isArray(state.bets)) state.bets = [];
 
   // --- init UI ---
   $("date").value = todayISO();
@@ -224,15 +40,21 @@
     localStorage.setItem(KEY, JSON.stringify(state));
   }
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  }
-
   function uid() {
     return Math.random().toString(16).slice(2) + Date.now().toString(16);
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function parseAmount(value) {
+    const cleaned = String(value || "").replace(/[^0-9.]/g, "");
+    const n = Number(cleaned);
+    if (!isFinite(n) || n <= 0) return null;
+    return n;
   }
 
   function typeTag(t) {
@@ -247,12 +69,24 @@
     return `<span class="tag ${cls}">${label}</span>`;
   }
 
+  // IMPORTANT: loss does NOT change balance (prevents double counting)
   function signedAmount(tx) {
-    // Convention:
-    // deposit +, win +, withdrawal -, bet -, loss -
     const a = Number(tx.amount || 0);
     if (tx.type === "deposit" || tx.type === "win") return +a;
-    return -a;
+    if (tx.type === "loss") return 0;
+    return -a; // bet, withdrawal
+  }
+
+  function computeRunning() {
+    const sorted = [...state.tx].sort((a,b) =>
+      (a.date||"").localeCompare(b.date||"") || (a.id||"").localeCompare(b.id||"")
+    );
+    let bal = 0;
+    const withBal = sorted.map(t => {
+      bal += signedAmount(t);
+      return {...t, running: bal};
+    });
+    return withBal;
   }
 
   function rebuildMemberSelect() {
@@ -285,21 +119,9 @@
         state.members.splice(i,1);
         if (state.members.length === 0) state.members.push("J");
         save();
-        rebuildMemberSelect();
-        renderMembers();
         renderAll();
       });
     });
-  }
-
-  function computeRunning() {
-    const sorted = [...state.tx].sort((a,b) => (a.date||"").localeCompare(b.date||"") || (a.id||"").localeCompare(b.id||""));
-    let bal = 0;
-    const withBal = sorted.map(t => {
-      bal += signedAmount(t);
-      return {...t, running: bal};
-    });
-    return withBal;
   }
 
   function renderLedger() {
@@ -318,13 +140,16 @@
     tbody.innerHTML = filtered.map(r => {
       const amt = signedAmount(r);
       const cls = amt >= 0 ? "good" : "bad";
+      const showAmt = (r.type === "loss") ? fmt(0) : fmt(Math.abs(amt));
+      const suffix = (r.type === "loss") ? "" : (amt < 0 ? " -" : " +");
+
       return `
         <tr>
           <td>${escapeHtml(r.date || "")}</td>
           <td>${typeTag(r.type)}</td>
           <td>${escapeHtml(r.member || "")}</td>
           <td>${escapeHtml(r.notes || "")}</td>
-          <td class="right ${cls}">${fmt(Math.abs(amt))}${amt < 0 ? " -" : " +"}</td>
+          <td class="right ${cls}">${showAmt}${suffix}</td>
           <td class="right">${fmt(r.running)}</td>
           <td class="right"><button class="btn2" data-x="${r.id}">Delete</button></td>
         </tr>
@@ -344,23 +169,96 @@
     });
   }
 
+  // ---- Pending bets ----
+  function renderPendingBets() {
+    const tbody = $("pendingBets");
+    const pending = state.bets.filter(b => b.status === "pending")
+      .sort((a,b)=> (b.date||"").localeCompare(a.date||"") || (b.id||"").localeCompare(a.id||""));
+
+    if (pending.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="mini muted">No pending bets.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = pending.map(b => `
+      <tr>
+        <td>${escapeHtml(b.date || "")}</td>
+        <td>${fmt(b.stake)}</td>
+        <td>${Number(b.odds).toFixed(2)}</td>
+        <td>${fmt(b.projected)}</td>
+        <td>${escapeHtml(b.notes || "")}</td>
+        <td class="right">
+          <button class="btn2" data-win="${b.id}">WIN</button>
+          <button class="btn2" data-loss="${b.id}">LOSS</button>
+        </td>
+      </tr>
+    `).join("");
+
+    tbody.querySelectorAll("button[data-win]").forEach(btn => {
+      btn.addEventListener("click", () => settleBet(btn.getAttribute("data-win"), "win"));
+    });
+    tbody.querySelectorAll("button[data-loss]").forEach(btn => {
+      btn.addEventListener("click", () => settleBet(btn.getAttribute("data-loss"), "loss"));
+    });
+  }
+
+  function settleBet(betId, outcome) {
+    const bet = state.bets.find(b => b.id === betId);
+    if (!bet || bet.status !== "pending") return;
+
+    if (!confirm(`Settle this bet as ${outcome.toUpperCase()}?`)) return;
+
+    bet.status = outcome === "win" ? "won" : "lost";
+    bet.settledAt = todayISO();
+
+    // Create ledger entries for settlement:
+    // - WIN adds projected return into balance
+    // - LOSS adds a $0 loss marker (no balance change)
+    if (outcome === "win") {
+      state.tx.push({
+        id: uid(),
+        type: "win",
+        date: bet.date || todayISO(),
+        amount: bet.projected,
+        member: bet.member || "",
+        notes: `WIN settled: ${bet.notes || "Bet"} (stake ${bet.stake}, odds ${bet.odds})`
+      });
+    } else {
+      state.tx.push({
+        id: uid(),
+        type: "loss",
+        date: bet.date || todayISO(),
+        amount: 0,
+        member: bet.member || "",
+        notes: `LOSS settled: ${bet.notes || "Bet"} (stake ${bet.stake}, odds ${bet.odds})`
+      });
+    }
+
+    save();
+    renderAll();
+  }
+
   function renderSummary() {
     const tx = state.tx;
+
     const dep = tx.filter(t=>t.type==="deposit").reduce((s,t)=>s+Number(t.amount||0),0);
     const wins = tx.filter(t=>t.type==="win").reduce((s,t)=>s+Number(t.amount||0),0);
     const bets = tx.filter(t=>t.type==="bet").reduce((s,t)=>s+Number(t.amount||0),0);
-    const losses = tx.filter(t=>t.type==="loss").reduce((s,t)=>s+Number(t.amount||0),0);
     const wds = tx.filter(t=>t.type==="withdrawal").reduce((s,t)=>s+Number(t.amount||0),0);
 
     const bal = computeRunning().slice(-1)[0]?.running ?? 0;
-    const net = (wins) - (bets + losses) - (wds * 0); // Net from betting activity (wins - stakes/losses). Withdrawals aren't "loss", they're distribution.
-    // Net P/L as "balance - deposits + withdrawals" (money made vs contributed)
     const netPL = bal - dep + wds;
 
     $("balance").textContent = fmt(bal);
     $("deposits").textContent = fmt(dep);
     $("net").textContent = fmt(netPL);
     $("net").className = "big " + (netPL >= 0 ? "good" : "bad");
+
+    // pending bets stats
+    const pending = state.bets.filter(b=>b.status==="pending");
+    const pendingStake = pending.reduce((s,b)=>s + Number(b.stake||0), 0);
+    const wonCount = state.bets.filter(b=>b.status==="won").length;
+    const lostCount = state.bets.filter(b=>b.status==="lost").length;
 
     // per-member deposits
     const perMember = {};
@@ -370,10 +268,11 @@
 
     const lines = [];
     lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Deposits</span><b>${fmt(dep)}</b></div>`);
-    lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Bets placed</span><b>${fmt(bets)}</b></div>`);
-    lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Wins</span><b>${fmt(wins)}</b></div>`);
-    lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Loss entries</span><b>${fmt(losses)}</b></div>`);
+    lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Bets placed (stake)</span><b>${fmt(bets)}</b></div>`);
+    lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Wins (returns)</span><b>${fmt(wins)}</b></div>`);
     lines.push(`<div class="pill" style="width:100%; justify-content:space-between;"><span class="muted">Withdrawals / payouts</span><b>${fmt(wds)}</b></div>`);
+
+    lines.push(`<div style="margin-top:10px" class="mini muted">Pending bets: <b>${pending.length}</b> • Pending stake: <b>${fmt(pendingStake)}</b> • Won: <b>${wonCount}</b> • Lost: <b>${lostCount}</b></div>`);
 
     lines.push(`<div style="margin-top:10px" class="mini muted">Deposits by member (only when you select a member on deposit):</div>`);
     const memLines = state.members.map(m => {
@@ -385,24 +284,28 @@
     $("summary").innerHTML = lines.join("");
   }
 
-  function renderAll() {
-    rebuildMemberSelect();
-    renderMembers();
-    renderLedger();
-    renderSummary();
+  // --- odds + projected UI ---
+  function updateBetFieldsVisibility() {
+    const isBet = $("type").value === "bet";
+    // We used two wrappers in HTML
+    const oddsWrap = $("oddsWrap");
+    const projWrap = $("projWrap");
+    if (!oddsWrap || !projWrap) return;
+
+    oddsWrap.style.display = isBet ? "block" : "none";
+    projWrap.style.display = isBet ? "block" : "none";
+    if (!isBet) {
+      $("odds").value = "";
+      $("projected").value = fmt(0);
+    }
   }
 
-  function parseAmount(value) {
-    const cleaned = String(value || "").replace(/[^0-9.]/g, "");
-    const n = Number(cleaned);
-    if (!isFinite(n) || n <= 0) return null;
-    return n;
-  }
-
-  function escapeHtml(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
+  function updateProjected() {
+    if ($("type").value !== "bet") return;
+    const stake = parseAmount($("amount").value) || 0;
+    const odds = parseAmount($("odds").value) || 0;
+    const projected = stake > 0 && odds > 0 ? stake * odds : 0;
+    $("projected").value = fmt(projected);
   }
 
   // --- handlers ---
@@ -413,6 +316,48 @@
     const member = $("member").value || "";
     const notes = $("notes").value || "";
 
+    if (type === "bet") {
+      const stake = amount;
+      const odds = parseAmount($("odds").value);
+      if (!stake) return alert("Enter a valid stake > 0");
+      if (!odds) return alert("Enter valid decimal odds (e.g. 2.80)");
+
+      const projected = stake * odds;
+      const betId = uid();
+
+      // 1) store bet as pending
+      state.bets.push({
+        id: betId,
+        status: "pending",
+        date,
+        stake,
+        odds,
+        projected,
+        member,
+        notes
+      });
+
+      // 2) add ledger entry for stake outflow (reduces balance)
+      state.tx.push({
+        id: uid(),
+        type: "bet",
+        date,
+        amount: stake,
+        member,
+        notes: `PENDING bet: ${notes || ""} (odds ${odds.toFixed(2)}, return ${fmt(projected)})`
+      });
+
+      save();
+      $("amount").value = "";
+      $("odds").value = "";
+      $("notes").value = "";
+      $("member").value = "";
+      $("projected").value = fmt(0);
+      renderAll();
+      return;
+    }
+
+    // normal transaction flow
     if (!amount) return alert("Enter a valid amount > 0");
 
     state.tx.push({ id: uid(), type, date, amount, member, notes });
@@ -463,25 +408,36 @@
   $("search").addEventListener("input", renderLedger);
   $("filterType").addEventListener("change", renderLedger);
 
+  $("type").addEventListener("change", () => {
+    updateBetFieldsVisibility();
+    updateProjected();
+  });
+
+  $("amount").addEventListener("input", updateProjected);
+  $("odds").addEventListener("input", updateProjected);
+
   $("btnExport").addEventListener("click", () => {
     const rows = computeRunning();
     const header = ["date","type","member","notes","raw_amount","signed_amount","running_balance"];
+    const csvCell = (v) => {
+      const s = String(v ?? "");
+      const escaped = s.replaceAll('"', '""');
+      return /[,"\n]/.test(escaped) ? `"${escaped}"` : escaped;
+    };
+
     const csv = [
       header.join(","),
       ...rows.map(r => {
         const signed = signedAmount(r);
         return [
-          r.date || "",
-          r.type || "",
-          (r.member || "").replaceAll('"','""'),
-          (r.notes || "").replaceAll('"','""'),
-          Number(r.amount||0),
-          signed,
-          Number(r.running||0)
-        ].map(v => {
-          const s = String(v);
-          return /[,"\n]/.test(s) ? `"${s}"` : s;
-        }).join(",");
+          csvCell(r.date || ""),
+          csvCell(r.type || ""),
+          csvCell(r.member || ""),
+          csvCell(r.notes || ""),
+          csvCell(Number(r.amount||0)),
+          csvCell(signed),
+          csvCell(Number(r.running||0))
+        ].join(",");
       })
     ].join("\n");
 
@@ -504,6 +460,7 @@
       state.members = obj.members;
       state.tx = obj.tx;
       state.weeklyDefault = obj.weeklyDefault ?? 25;
+      state.bets = Array.isArray(obj.bets) ? obj.bets : [];
       save();
       $("weeklyDefault").value = state.weeklyDefault;
       renderAll();
@@ -518,6 +475,7 @@
   $("btnReset").addEventListener("click", () => {
     if (!confirm("Reset everything? This wipes members + ledger.")) return;
     localStorage.removeItem(KEY);
+    localStorage.removeItem("punters_club_tracker_v1");
     location.reload();
   });
 
@@ -533,8 +491,17 @@
     URL.revokeObjectURL(url);
   }
 
+  function renderAll() {
+    rebuildMemberSelect();
+    renderMembers();
+    renderLedger();
+    renderPendingBets();
+    renderSummary();
+    updateBetFieldsVisibility();
+    updateProjected();
+  }
+
   renderAll();
 })();
 </script>
-</body>
-</html>
+
